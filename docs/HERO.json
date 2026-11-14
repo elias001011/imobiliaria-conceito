@@ -1,7 +1,7 @@
 {
   "autoria": "Connecta",
   "tipo": "Capturas da cena procedural Three.js do próprio projeto",
-  "versao": 4,
+  "versao": 5,
   "progresso": 0,
   "variantes": {
     "wide": "1585 × 900",
@@ -12,5 +12,5 @@
     "dia",
     "noite"
   ],
-  "observacao": "As imagens v4 correspondem ao novo ciclo celeste. As v3 permanecem disponíveis para compatibilidade com abas abertas da versão anterior."
+  "observacao": "Paisagem ampliada com iluminação original restaurada. Astros animados apenas como elementos visuais. Imagens v3 e v4 preservadas para compatibilidade com abas antigas."
 }

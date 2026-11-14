@@ -189,7 +189,7 @@ button { border: 0; background: transparent; cursor: pointer; }
 .nav--on-dark .nav-progress { opacity: 0; }
 
 .marca { display: inline-flex; align-items: center; gap: 10px; }
-.marca-simbolo { width: 36px; height: 36px; }
+.marca-simbolo { width: 40px; height: 40px; flex: none; }
 .nav--on-dark .marca-simbolo { filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.25)); }
 .marca-texto { display: flex; flex-direction: column; line-height: 1; }
 .marca-nome { font-size: 1.12rem; font-weight: 600; letter-spacing: -0.03em; }

@@ -8,7 +8,7 @@ Experiência de portfólio criada pela **Connecta** para demonstrar desenvolvime
 
 ## A experiência
 
-- Hero com casa e paisagem procedurais em Three.js. A câmera percorre deck, fachada, porta e interior conforme a rolagem.
+- Hero com casa e paisagem procedurais em Three.js. A câmera percorre deck, fachada, porta e interior conforme a rolagem. Coxilhas e mata em camadas completam o horizonte, reutilizando a malha e os materiais existentes.
 - Temas claro e escuro com percurso visual do sol e da lua, preservando a iluminação original de cada tema.
 - Catálogo com pesquisa local por tipo, código e palavra, além de seis destaques na página inicial.
 - Cartões com fotografias empilhadas, ficha em diálogo nativo com transição discreta e galeria ampliada dentro da ficha. No desktop, a ficha fecha por clique fora ou Esc; no celular, conserva o botão de fechar.
@@ -57,7 +57,7 @@ npm audit
 
 `npm run dev` inicia o ambiente de desenvolvimento; `npm run preview` permite conferir o build localmente. Ambos são ferramentas locais, não servidores de produção.
 
-Os testes cobrem filtros combinados, busca sem acentos, parâmetros inválidos, integridade do catálogo 360°, validação do retorno do tour e continuidade numérica do trajeto da câmera em formatos vertical e horizontal e sincronização do ciclo celeste. A integração contínua executa lint, testes, build e auditoria de dependências.
+Os testes cobrem filtros combinados, busca sem acentos, parâmetros inválidos, integridade do catálogo 360°, validação do retorno do tour e continuidade numérica do trajeto da câmera em formatos vertical e horizontal e movimento visual dos astros, preservação da direção da luz e orçamento da malha do terreno. A [nota sobre a paisagem](docs/PAISAGEM.md) registra a contagem de geometria e os parâmetros originais de iluminação. A integração contínua executa lint, testes, build e auditoria de dependências.
 
 ## Publicação estática e segurança
 

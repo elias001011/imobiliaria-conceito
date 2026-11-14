@@ -331,7 +331,25 @@ export function criarVegetacao(tex: Texturas, baixa: boolean): THREE.Group {
       copas.push({ x: cx, z: cz, y: altura(cx, cz), s, sy: s * (0.9 + rnd() * 0.6), ry: rnd() * 6.283, cor: tom(0.4) });
     }
   }
-  grupo.add(instanciar(araucaria(semente(31), 16, 0), folhagem, longe, false, 'araucarias-longe'));
+  // Mantém a sequência original do gerador para não alterar os jardins e as sombras perto da casa.
+  // A vegetação extra usa uma semente própria e fica apenas ao fundo.
+  const fundoRnd = semente(90214);
+  const extras = baixa ? 32 : 240;
+  let novas = 0;
+  let tentativas = 0;
+  while (novas < extras && tentativas++ < 8000) {
+    const a = fundoRnd() * Math.PI * 2;
+    const r = 235 + fundoRnd() * 225;
+    const x = CENTRO.x + Math.cos(a) * r;
+    const z = CENTRO.z + Math.sin(a) * r;
+    if (distEstrada(x, z) < 12 || fbm(x * 0.0085 + 21, z * 0.0085 + 3, 3) < 0.47) continue;
+    const esc = 3.4 + fundoRnd() * 3.2;
+    const tomFundo = 0.82 + fundoRnd() * 0.32;
+    copas.push({ x, z, y: altura(x, z), s: esc, sy: esc * (0.9 + fundoRnd() * 0.5), ry: fundoRnd() * Math.PI * 2, cor: new THREE.Color().setRGB(tomFundo * 0.96, tomFundo, tomFundo * 0.92) });
+    novas++;
+  }
+  const pinheiros = baixa ? longe.slice(0, 28) : longe.filter((_, i) => i % 4 !== 0);
+  grupo.add(instanciar(araucaria(semente(31), 16, 0), folhagem, pinheiros, false, 'araucarias-longe'));
   // Capão: copas de alturas diferentes sobre troncos curtos. Mais detalhe só nos mais próximos.
   const paletaMata = [lin('#1f2f19'), lin('#2d4020'), lin('#3c5027'), lin('#4a5a2c')];
   const capao = (sem: number, det: number) => {
@@ -349,7 +367,8 @@ export function criarVegetacao(tex: Texturas, baixa: boolean): THREE.Group {
   const copasPerto = baixa ? [] : copas.filter((c) => dist(c) < 230);
   const copasLonge = baixa ? copas : copas.filter((c) => dist(c) >= 230);
   if (copasPerto.length) grupo.add(instanciar(capao(3, 1), folhagem, copasPerto, false, 'mata-perto'));
-  grupo.add(instanciar(capao(4, baixa ? 0 : 1), folhagem, copasLonge, false, 'mata'));
+  // Mais massa de mata, com copas simples à distância: menos triângulos por árvore e a mesma chamada de desenho.
+  grupo.add(instanciar(capao(4, 0), folhagem, copasLonge, false, 'mata'));
 
   // Árvores de copa larga no meio do campo.
   const arvores: Inst[] = giro([

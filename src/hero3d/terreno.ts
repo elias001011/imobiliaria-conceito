@@ -22,6 +22,11 @@ export function altura(x: number, z: number): number {
   // Morros ao fundo, mais baixos na direção do sol.
   const morro = 0.35 + 0.65 * fbm(x * 0.004 + 40.7, z * 0.004 + 12.9, 3);
   h += suave(190, 400, r) * morro * 24 * (1 - 0.8 * Math.max(0, paraSol) ** 2);
+  // Duas escalas de coxilhas no horizonte. A casa e seus primeiros 140 m ficam intactos.
+  const coxilha = fbm(x * 0.0032 + 81.2, z * 0.0032 + 27.4, 3);
+  const serra = fbm(x * 0.0018 + 18.7, z * 0.0018 + 63.1, 3);
+  h += suave(140, 350, r) * (7 + 31 * coxilha);
+  h += suave(330, 800, r) * (20 + 78 * serra);
   return h;
 }
 
@@ -67,12 +72,14 @@ export function criarTerreno(t: Texturas, baixa: boolean): THREE.Mesh {
   const pastoClaro = cor('#7f8646');
   const seco = cor('#9c9464');
   const c = new THREE.Color();
+  const alcance = (v: number) => Math.sign(v) * (Math.pow(Math.abs(v), 1.5) * LADO + suave(0.55, 1, Math.abs(v)) * 480);
   for (let i = 0; i < p.count; i++) {
     // Malha mais densa perto da casa.
     const u = p.getX(i);
     const v = p.getZ(i);
-    const x = CENTRO.x + Math.sign(u) * Math.pow(Math.abs(u), 1.5) * LADO;
-    const z = CENTRO.z + Math.sign(v) * Math.pow(Math.abs(v), 1.5) * LADO;
+    // Estende só a borda da malha até 900 m; nenhum vértice ou draw call adicional.
+    const x = CENTRO.x + alcance(u);
+    const z = CENTRO.z + alcance(v);
     p.setXYZ(i, x, altura(x, z), z);
     const r = Math.hypot(x - CENTRO.x, z - CENTRO.z);
     const a = fbm(x * 0.045 + 9, z * 0.045 + 2, 3);

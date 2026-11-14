@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { cicloCeleste, type CicloCeleste } from './cicloCeleste';
 
-const ciclo: CicloCeleste = { sol: [0, 0, 0], lua: [0, 0, 0], luzSol: 1, luzLua: 0, estrelas: 0, crepusculo: 0 };
+const ciclo: CicloCeleste = { sol: [0, 0, 0], lua: [0, 0, 0], estrelas: 0 };
 cicloCeleste(0, ciclo);
 // Direção original da iluminação: não acompanha a animação decorativa dos astros.
 const AZ = THREE.MathUtils.degToRad(70);
@@ -15,13 +15,12 @@ export const DIRECAO_LUA = { value: new THREE.Vector3().fromArray(ciclo.lua) };
 export const ESTRELAS = { value: 0 };
 export const UNIFORMES_CEU = { hcNoite: NOITE, hcSol: DIRECAO_SOL, hcLua: DIRECAO_LUA, hcEstrelas: ESTRELAS };
 
-export function atualizarCeu(noite: number, vertical = false): CicloCeleste {
+export function atualizarCeu(noite: number, vertical = false): void {
   cicloCeleste(noite, ciclo, vertical);
   NOITE.value = noite;
   DIRECAO_SOL.value.fromArray(ciclo.sol);
   DIRECAO_LUA.value.fromArray(ciclo.lua);
   ESTRELAS.value = ciclo.estrelas;
-  return ciclo;
 }
 
 const f = (n: number) => n.toFixed(5);

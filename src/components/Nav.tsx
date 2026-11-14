@@ -14,7 +14,15 @@ const LINKS = [
 export function Marca({ compacta = false }: { compacta?: boolean }) {
   return (
     <span className="marca">
-      <img className="marca-simbolo" src="/brand/imobiliaria.svg" width="36" height="36" alt="" />
+      <svg className="marca-simbolo" viewBox="0 0 64 64" width="40" height="40" fill="none" aria-hidden="true">
+        <circle cx="44" cy="19" r="6" fill="#d9a332" />
+        <path d="M7 42c13-8 31-9 50 1a27 27 0 0 1-50-1Z" fill="#92ad52" />
+        <path d="M10 46c13-5 26-1 41 6a27 27 0 0 1-41-6Z" fill="#597d37" />
+        <g stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="32" cy="32" r="27" />
+          <path d="m14 34 13-12 13 12M18 31v14h18V31M25 45v-9h6v9" />
+        </g>
+      </svg>
       {!compacta && (
         <span className="marca-texto">
           <span className="marca-nome">Imobiliária</span>

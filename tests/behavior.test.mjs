@@ -3,26 +3,29 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 
 // Compila apenas módulos puros, sem navegador ou dependências adicionais de teste.
 const temp = mkdtempSync(join(tmpdir(), 'imob-tests-'));
-writeFileSync(join(temp, 'package.json'), '{"type":"commonjs"}');
-for (const file of ['data/imoveis', 'lib/catalogo', 'lib/retorno', 'hero3d/trilho', 'hero3d/cicloCeleste']) {
+writeFileSync(join(temp, 'package.json'), '{"type":"module"}');
+for (const file of ['data/imoveis', 'lib/catalogo', 'lib/retorno', 'hero3d/trilho', 'hero3d/cicloCeleste', 'hero3d/ceu', 'hero3d/ruido', 'hero3d/terreno']) {
   const dest = join(temp, file + '.js');
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, ts.transpileModule(readFileSync(new URL('../src/' + file + '.ts', import.meta.url), 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  }).outputText);
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  }).outputText
+    .replace(/from (['"])(\.{1,2}\/[^'"]+)\1/g, (_, q, spec) => `from ${q}${spec.endsWith('.js') ? spec : spec + '.js'}${q}`)
+    .replace(/from ['"]three['"]/g, `from ${JSON.stringify(import.meta.resolve('three'))}`));
 }
 after(() => rmSync(temp, { recursive: true, force: true }));
-const require = createRequire(import.meta.url);
-const { IMOVEIS } = require(join(temp, 'data/imoveis.js'));
-const { filtrar, tipoValido } = require(join(temp, 'lib/catalogo.js'));
-const { lerRetorno } = require(join(temp, 'lib/retorno.js'));
-const { criarTrilho } = require(join(temp, 'hero3d/trilho.js'));
-const { cicloCeleste } = require(join(temp, 'hero3d/cicloCeleste.js'));
+const { IMOVEIS } = await import(pathToFileURL(join(temp, 'data/imoveis.js')).href);
+const { filtrar, tipoValido } = await import(pathToFileURL(join(temp, 'lib/catalogo.js')).href);
+const { lerRetorno } = await import(pathToFileURL(join(temp, 'lib/retorno.js')).href);
+const { criarTrilho } = await import(pathToFileURL(join(temp, 'hero3d/trilho.js')).href);
+const { cicloCeleste } = await import(pathToFileURL(join(temp, 'hero3d/cicloCeleste.js')).href);
+const { SOL, atualizarCeu } = await import(pathToFileURL(join(temp, 'hero3d/ceu.js')).href);
+const { altura, criarTerreno } = await import(pathToFileURL(join(temp, 'hero3d/terreno.js')).href);
 
 test('busca aceita código sem diferenciar caixa e espaços', () => {
   assert.deepEqual(filtrar({ tipo: 'todos', codigo: ' cas001 ' }).map(i => i.codigo), ['CAS001']);
@@ -71,23 +74,18 @@ test('câmera tem valores finitos e percorre a porta nos dois formatos', () => {
 });
 
 test('ciclo celeste mantém direções normalizadas e alterna os astros em sequência', () => {
-  const q = { sol: [0,0,0], lua: [0,0,0], luzSol: 0, luzLua: 0, estrelas: 0, crepusculo: 0 };
+  const q = { sol: [0,0,0], lua: [0,0,0], estrelas: 0 };
   cicloCeleste(0, q);
   assert.ok(q.sol[1] > 0 && q.lua[1] < 0);
-  assert.equal(q.luzSol, 1);
-  assert.equal(q.luzLua, 0);
   let anterior = structuredClone(q);
   for (let step = 1; step <= 1000; step++) {
     cicloCeleste(step / 1000, q);
     for (const vetor of [q.sol, q.lua]) assert.ok(Math.abs(Math.hypot(...vetor) - 1) < 1e-12);
     assert.ok(q.sol[1] <= anterior.sol[1]);
     assert.ok(q.lua[1] >= anterior.lua[1]);
-    assert.ok(q.luzSol <= anterior.luzSol && q.luzLua >= anterior.luzLua);
     anterior = structuredClone(q);
   }
   assert.ok(q.sol[1] < 0 && q.lua[1] > 0);
-  assert.equal(q.luzSol, 0);
-  assert.equal(q.luzLua, 1);
   assert.equal(q.estrelas, 1);
   const noite = structuredClone(q);
   cicloCeleste(0, q);
@@ -96,4 +94,32 @@ test('ciclo celeste mantém direções normalizadas e alterna os astros em sequ�
   cicloCeleste(1, q, true);
   assert.ok(q.lua[1] > 0 && q.lua[1] < noite.lua[1]);
   assert.ok(Math.abs(Math.hypot(...q.lua) - 1) < 1e-12);
+});
+
+test('animação decorativa não altera a direção original da iluminação', () => {
+  const az = 70 * Math.PI / 180;
+  const el = 9 * Math.PI / 180;
+  const esperado = [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)];
+  for (const vertical of [false, true]) {
+    for (const n of [0, 0.25, 0.5, 0.75, 1, 0]) {
+      atualizarCeu(n, vertical);
+      SOL.toArray().forEach((value, index) => assert.ok(Math.abs(value - esperado[index]) < 1e-12));
+    }
+  }
+});
+test('paisagem amplia o horizonte mantendo o orçamento da malha e o platô da casa', () => {
+  assert.equal(altura(2, 0), 0);
+  assert.equal(altura(-7, 3), 0);
+  assert.equal(altura(11, -4), 0);
+  for (const baixa of [true, false]) {
+    const terreno = criarTerreno({ grama: null }, baixa);
+    const g = terreno.geometry;
+    const limite = baixa ? 20000 : 60000;
+    assert.ok(g.index.count / 3 <= limite);
+    g.computeBoundingBox();
+    assert.ok(g.boundingBox.max.x >= 900 && g.boundingBox.min.z <= -900);
+    assert.ok([...g.attributes.position.array].every(Number.isFinite));
+    g.dispose();
+    terreno.material.dispose();
+  }
 });
