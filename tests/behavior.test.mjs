@@ -24,7 +24,7 @@ const { filtrar, tipoValido } = await import(pathToFileURL(join(temp, 'lib/catal
 const { lerRetorno } = await import(pathToFileURL(join(temp, 'lib/retorno.js')).href);
 const { criarTrilho } = await import(pathToFileURL(join(temp, 'hero3d/trilho.js')).href);
 const { cicloCeleste } = await import(pathToFileURL(join(temp, 'hero3d/cicloCeleste.js')).href);
-const { SOL, atualizarCeu } = await import(pathToFileURL(join(temp, 'hero3d/ceu.js')).href);
+const { SOL, DIRECAO_SOL, atualizarCeu } = await import(pathToFileURL(join(temp, 'hero3d/ceu.js')).href);
 const { altura, criarTerreno } = await import(pathToFileURL(join(temp, 'hero3d/terreno.js')).href);
 
 test('busca aceita código sem diferenciar caixa e espaços', () => {
@@ -96,14 +96,18 @@ test('ciclo celeste mantém direções normalizadas e alterna os astros em sequ�
   assert.ok(Math.abs(Math.hypot(...q.lua) - 1) < 1e-12);
 });
 
-test('animação decorativa não altera a direção original da iluminação', () => {
+test('sol visível começa na direção original e permanece do mesmo lado durante a animação', () => {
   const az = 70 * Math.PI / 180;
   const el = 9 * Math.PI / 180;
   const esperado = [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)];
   for (const vertical of [false, true]) {
+    atualizarCeu(0, vertical);
+    DIRECAO_SOL.value.toArray().forEach((value, index) => assert.ok(Math.abs(value - esperado[index]) < 1e-12));
     for (const n of [0, 0.25, 0.5, 0.75, 1, 0]) {
       atualizarCeu(n, vertical);
       SOL.toArray().forEach((value, index) => assert.ok(Math.abs(value - esperado[index]) < 1e-12));
+      assert.ok(DIRECAO_SOL.value.x > 0 && DIRECAO_SOL.value.z > 0);
+      assert.ok(Math.abs(DIRECAO_SOL.value.x / DIRECAO_SOL.value.z - Math.tan(az)) < 1e-12);
     }
   }
 });

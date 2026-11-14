@@ -24,3 +24,5 @@ O sol que ilumina a cena mantém os valores originais: azimute de 70°, elevaç�
 Os discos animados do sol e da lua são elementos decorativos do domo. Não movem a luz direcional, não geram uma luz adicional e não alteram o ambiente usado nos reflexos. A bruma, as nuvens e o gradiente do céu usam a direção original do sol.
 
 Os testes verificam a invariância dessa direção durante a animação, o platô da casa, o alcance do terreno e os limites de triângulos da malha nos dois níveis de qualidade.
+
+O disco visível do sol começa alinhado à direção original (70° / 9°) em ambos os formatos. Durante a troca de tema, desce no mesmo azimute, sem atravessar para o lado oposto. O teste verifica tanto esse alinhamento visual quanto a invariância da iluminação.

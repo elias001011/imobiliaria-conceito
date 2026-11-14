@@ -1,12 +1,12 @@
 // Céu de fim de tarde (degradê, halo do sol, nuvens) e bruma que usa a mesma cor do céu em cada direção.
 import * as THREE from 'three';
-import { cicloCeleste, type CicloCeleste } from './cicloCeleste';
+import { cicloCeleste, SOL_ORIGINAL, type CicloCeleste } from './cicloCeleste';
 
 const ciclo: CicloCeleste = { sol: [0, 0, 0], lua: [0, 0, 0], estrelas: 0 };
 cicloCeleste(0, ciclo);
 // Direção original da iluminação: não acompanha a animação decorativa dos astros.
-const AZ = THREE.MathUtils.degToRad(70);
-const EL = THREE.MathUtils.degToRad(9);
+const AZ = THREE.MathUtils.degToRad(SOL_ORIGINAL.azimute);
+const EL = THREE.MathUtils.degToRad(SOL_ORIGINAL.elevacao);
 export const SOL = new THREE.Vector3(Math.sin(AZ) * Math.cos(EL), Math.sin(EL), Math.cos(AZ) * Math.cos(EL));
 export const COR_SOL = new THREE.Color(1.0, 0.63, 0.31);
 export const NOITE = { value: 0 };

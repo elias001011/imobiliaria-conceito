@@ -1,7 +1,7 @@
 {
   "autoria": "Connecta",
   "tipo": "Capturas da cena procedural Three.js do próprio projeto",
-  "versao": 5,
+  "versao": 6,
   "progresso": 0,
   "variantes": {
     "wide": "1585 × 900",
@@ -12,5 +12,5 @@
     "dia",
     "noite"
   ],
-  "observacao": "Paisagem ampliada com iluminação original restaurada. Astros animados apenas como elementos visuais. Imagens v3 e v4 preservadas para compatibilidade com abas antigas."
+  "observacao": "Sol visível no mesmo lado e na posição inicial original (70° / 9°), com iluminação preservada. A paisagem ampliada e o ícone permanecem. Imagens anteriores preservadas para compatibilidade com abas antigas."
 }

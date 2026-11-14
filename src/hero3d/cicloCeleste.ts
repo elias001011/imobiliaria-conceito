@@ -1,4 +1,6 @@
 // Percurso visual dos astros. Não modifica a iluminação, as sombras ou o ambiente da cena.
+export const SOL_ORIGINAL = Object.freeze({ azimute: 70, elevacao: 9 });
+
 export interface CicloCeleste {
   sol: [number, number, number];
   lua: [number, number, number];
@@ -17,9 +19,10 @@ const direcao = (az: number, el: number, out: [number, number, number]) => {
 };
 export function cicloCeleste(noite: number, out: CicloCeleste, vertical = false): void {
   const n = Math.max(0, Math.min(1, noite));
-  const altura = vertical ? 0.7 : 1; // mantém os astros abaixo da navegação no enquadramento vertical
+  const altura = vertical ? 0.7 : 1; // mantém a lua abaixo da navegação no enquadramento vertical
   // O sol se põe antes de a lua completar sua subida; voltar ao claro inverte o percurso.
-  direcao(-100 - 22 * n, (11 - 32 * n) * altura, out.sol);
+  // O disco permanece no mesmo lado da luz original, inclusive no enquadramento vertical.
+  direcao(SOL_ORIGINAL.azimute, SOL_ORIGINAL.elevacao - 30 * n, out.sol);
   const subida = suave(0.25, 1, n);
   direcao(-124 + 29 * subida, (-12 + 23 * subida) * altura, out.lua);
   out.estrelas = suave(0.5, 1, n);
