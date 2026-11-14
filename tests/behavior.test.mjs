@@ -9,7 +9,7 @@ import ts from 'typescript';
 // Compila apenas módulos puros, sem navegador ou dependências adicionais de teste.
 const temp = mkdtempSync(join(tmpdir(), 'imob-tests-'));
 writeFileSync(join(temp, 'package.json'), '{"type":"commonjs"}');
-for (const file of ['data/imoveis', 'lib/catalogo', 'lib/retorno', 'hero3d/trilho']) {
+for (const file of ['data/imoveis', 'lib/catalogo', 'lib/retorno', 'hero3d/trilho', 'hero3d/cicloCeleste']) {
   const dest = join(temp, file + '.js');
   mkdirSync(dirname(dest), { recursive: true });
   writeFileSync(dest, ts.transpileModule(readFileSync(new URL('../src/' + file + '.ts', import.meta.url), 'utf8'), {
@@ -22,6 +22,7 @@ const { IMOVEIS } = require(join(temp, 'data/imoveis.js'));
 const { filtrar, tipoValido } = require(join(temp, 'lib/catalogo.js'));
 const { lerRetorno } = require(join(temp, 'lib/retorno.js'));
 const { criarTrilho } = require(join(temp, 'hero3d/trilho.js'));
+const { cicloCeleste } = require(join(temp, 'hero3d/cicloCeleste.js'));
 
 test('busca aceita código sem diferenciar caixa e espaços', () => {
   assert.deepEqual(filtrar({ tipo: 'todos', codigo: ' cas001 ' }).map(i => i.codigo), ['CAS001']);
@@ -67,4 +68,32 @@ test('câmera tem valores finitos e percorre a porta nos dois formatos', () => {
     trilho(1, q); const end = structuredClone(q);
     trilho(2, q); assert.deepEqual(q, end);
   }
+});
+
+test('ciclo celeste mantém direções normalizadas e alterna os astros em sequência', () => {
+  const q = { sol: [0,0,0], lua: [0,0,0], luzSol: 0, luzLua: 0, estrelas: 0, crepusculo: 0 };
+  cicloCeleste(0, q);
+  assert.ok(q.sol[1] > 0 && q.lua[1] < 0);
+  assert.equal(q.luzSol, 1);
+  assert.equal(q.luzLua, 0);
+  let anterior = structuredClone(q);
+  for (let step = 1; step <= 1000; step++) {
+    cicloCeleste(step / 1000, q);
+    for (const vetor of [q.sol, q.lua]) assert.ok(Math.abs(Math.hypot(...vetor) - 1) < 1e-12);
+    assert.ok(q.sol[1] <= anterior.sol[1]);
+    assert.ok(q.lua[1] >= anterior.lua[1]);
+    assert.ok(q.luzSol <= anterior.luzSol && q.luzLua >= anterior.luzLua);
+    anterior = structuredClone(q);
+  }
+  assert.ok(q.sol[1] < 0 && q.lua[1] > 0);
+  assert.equal(q.luzSol, 0);
+  assert.equal(q.luzLua, 1);
+  assert.equal(q.estrelas, 1);
+  const noite = structuredClone(q);
+  cicloCeleste(0, q);
+  cicloCeleste(1, q);
+  assert.deepEqual(q, noite);
+  cicloCeleste(1, q, true);
+  assert.ok(q.lua[1] > 0 && q.lua[1] < noite.lua[1]);
+  assert.ok(Math.abs(Math.hypot(...q.lua) - 1) < 1e-12);
 });

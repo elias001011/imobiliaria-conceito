@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { IMOVEIS, CONTATO_DEMO, rotuloTipo, TIPOS, type Imovel } from '../data/imoveis';
 import { Icon360, IconArea, IconArrow, IconBath, IconBed, IconCar, IconClose, IconPin, IconSearch, IconWhatsApp } from './Icons';
 
@@ -152,6 +152,15 @@ export function Ficha({ imovel, onFechar }: { imovel: Imovel | null; onFechar: (
   const ref = useRef<HTMLDialogElement>(null);
   const [atual, setAtual] = useState(0);
   const [ampliada, setAmpliada] = useState(false);
+  const fechamento = useRef(0);
+  const fechar = useCallback(() => {
+    const d = ref.current;
+    if (!d?.open || fechamento.current) return;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) { d.close(); return; }
+    d.classList.add('is-closing');
+    fechamento.current = window.setTimeout(() => d.close(), 140);
+  }, []);
+  useEffect(() => () => clearTimeout(fechamento.current), []);
   const ultimo = useRef<Imovel | null>(null);
   if (imovel) ultimo.current = imovel;
   const i = imovel ?? ultimo.current;
@@ -159,15 +168,19 @@ export function Ficha({ imovel, onFechar }: { imovel: Imovel | null; onFechar: (
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (imovel && !d.open) {
+    if (imovel) {
+      clearTimeout(fechamento.current);
+      fechamento.current = 0;
+      d.classList.remove('is-closing');
+      if (d.open) return;
       setAtual(0);
       d.showModal();
       d.querySelector<HTMLElement>('#ficha-titulo')?.focus({ preventScroll: true });
       document.body.classList.add('ficha-aberta');
-    } else if (!imovel && d.open) {
-      d.close();
+    } else if (d.open) {
+      fechar();
     }
-  }, [imovel]);
+  }, [imovel, fechar]);
 
   if (!i) return <dialog ref={ref} className="ficha" />;
 
@@ -176,11 +189,20 @@ export function Ficha({ imovel, onFechar }: { imovel: Imovel | null; onFechar: (
       ref={ref}
       className="ficha"
       aria-labelledby="ficha-titulo"
-      onClose={() => { document.body.classList.remove('ficha-aberta'); onFechar(); }}
-      onClick={(e) => { if (e.target === e.currentTarget) ref.current?.close(); }}
+      onCancel={e => { if (e.target === e.currentTarget) { e.preventDefault(); fechar(); } }}
+      onClose={e => {
+        if (e.target !== e.currentTarget) return;
+        clearTimeout(fechamento.current);
+        fechamento.current = 0;
+        ref.current?.classList.remove('is-closing');
+        document.body.classList.remove('ficha-aberta');
+        setAmpliada(false);
+        onFechar();
+      }}
+      onClick={e => { if (e.target === e.currentTarget) fechar(); }}
     >
       <div className="ficha-painel">
-        <button type="button" className="icon-btn ficha-x" onClick={() => ref.current?.close()} aria-label="Fechar"><IconClose /></button>
+        <button type="button" className="icon-btn ficha-x" onClick={fechar} aria-label="Fechar"><IconClose /></button>
         <div className="ficha-galeria">
           <div className="ficha-foto-wrap"><button className="ficha-ampliar" type="button" aria-label="Ampliar foto em tela cheia" onClick={() => setAmpliada(true)}><img key={i.fotos[atual]} className="ficha-foto" src={foto(i.fotos[atual], 1200)} alt={`${i.titulo} — foto ${atual + 1} de 2`} /></button>
           {i.tour360 && atual === 0 && <a className="btn ficha-tour-ver" href={tourHref(i)} onClick={guardarPosicao} aria-label="Ver demonstração 360°"><Icon360 className="btn-ic"/> Ver</a>}

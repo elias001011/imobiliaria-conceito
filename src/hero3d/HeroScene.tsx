@@ -142,7 +142,7 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
       cena.tema(escuro(), true);
       const aplicarTema = () => {
         // Fora da tela não há o que animar: aplica direto e desenha quando voltar.
-        cena?.tema(escuro(), !ativo || !preparada);
+        cena?.tema(escuro(), !ativo || !preparada || matchMedia('(prefers-reduced-motion: reduce)').matches);
         pedir();
       };
       const temaObserver = new MutationObserver(aplicarTema);

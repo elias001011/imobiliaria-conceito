@@ -9,9 +9,9 @@ Experiência de portfólio criada pela **Connecta** para demonstrar desenvolvime
 ## A experiência
 
 - Hero com casa e paisagem procedurais em Three.js. A câmera percorre deck, fachada, porta e interior conforme a rolagem.
-- Temas claro e escuro com iluminação correspondente na cena e transição suave de cores.
+- Temas claro e escuro com percurso do sol e da lua, crepúsculo e iluminação correspondente na cena.
 - Catálogo com pesquisa local por tipo, código e palavra, além de seis destaques na página inicial.
-- Cartões com fotografias empilhadas, ficha em diálogo nativo e galeria ampliada dentro da ficha.
+- Cartões com fotografias empilhadas, ficha em diálogo nativo com transição discreta e galeria ampliada dentro da ficha. No desktop, a ficha fecha por clique fora ou Esc; no celular, conserva o botão de fechar.
 - Demonstração panorâmica 360° no primeiro imóvel, com retorno à ficha e à posição anterior.
 - Layout responsivo, navegação por teclado, movimento reduzido e imagem estática quando a experiência WebGL não está disponível.
 
@@ -57,7 +57,7 @@ npm audit
 
 `npm run dev` inicia o ambiente de desenvolvimento; `npm run preview` permite conferir o build localmente. Ambos são ferramentas locais, não servidores de produção.
 
-Os testes cobrem filtros combinados, busca sem acentos, parâmetros inválidos, integridade do catálogo 360°, validação do retorno do tour e continuidade numérica do trajeto da câmera em formatos vertical e horizontal. A integração contínua executa lint, testes, build e auditoria de dependências.
+Os testes cobrem filtros combinados, busca sem acentos, parâmetros inválidos, integridade do catálogo 360°, validação do retorno do tour e continuidade numérica do trajeto da câmera em formatos vertical e horizontal e sincronização do ciclo celeste. A integração contínua executa lint, testes, build e auditoria de dependências.
 
 ## Publicação estática e segurança
 

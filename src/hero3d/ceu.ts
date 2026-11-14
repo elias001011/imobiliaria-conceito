@@ -1,12 +1,27 @@
 // Céu de fim de tarde (degradê, halo do sol, nuvens) e bruma que usa a mesma cor do céu em cada direção.
 import * as THREE from 'three';
+import { cicloCeleste, type CicloCeleste } from './cicloCeleste';
 
-const AZ = THREE.MathUtils.degToRad(70); // 0 = frente da casa (+Z), 90 = lado do deck (+X)
-const EL = THREE.MathUtils.degToRad(9);
-export const SOL = new THREE.Vector3(Math.sin(AZ) * Math.cos(EL), Math.sin(EL), Math.cos(AZ) * Math.cos(EL));
+const ciclo: CicloCeleste = { sol: [0, 0, 0], lua: [0, 0, 0], luzSol: 1, luzLua: 0, estrelas: 0, crepusculo: 0 };
+cicloCeleste(0, ciclo);
+export const SOL = new THREE.Vector3().fromArray(ciclo.sol);
 export const COR_SOL = new THREE.Color(1.0, 0.63, 0.31);
-
 export const NOITE = { value: 0 };
+export const DIRECAO_SOL = { value: SOL.clone() };
+export const DIRECAO_LUA = { value: new THREE.Vector3().fromArray(ciclo.lua) };
+export const CREPUSCULO = { value: 0 };
+export const ESTRELAS = { value: 0 };
+export const UNIFORMES_CEU = { hcNoite: NOITE, hcSol: DIRECAO_SOL, hcLua: DIRECAO_LUA, hcCrepusculo: CREPUSCULO, hcEstrelas: ESTRELAS };
+
+export function atualizarCeu(noite: number, vertical = false): CicloCeleste {
+  cicloCeleste(noite, ciclo, vertical);
+  NOITE.value = noite;
+  DIRECAO_SOL.value.fromArray(ciclo.sol);
+  DIRECAO_LUA.value.fromArray(ciclo.lua);
+  CREPUSCULO.value = ciclo.crepusculo;
+  ESTRELAS.value = ciclo.estrelas;
+  return ciclo;
+}
 
 const f = (n: number) => n.toFixed(5);
 
@@ -26,7 +41,11 @@ export function luzRasante(mat: THREE.Material, quanto: number): void {
 // Funções GLSL partilhadas pelo domo e pela bruma. Valores lineares, referidos à cena.
 const FUNCOES = /* glsl */ `
 uniform float hcNoite;
-const vec3 HC_SOL = vec3(${f(SOL.x)}, ${f(SOL.y)}, ${f(SOL.z)});
+uniform vec3 hcSol;
+uniform vec3 hcLua;
+uniform float hcCrepusculo;
+uniform float hcEstrelas;
+#define HC_SOL hcSol
 vec3 hc_ceu(vec3 d) {
   float y = clamp(d.y, 0.0, 1.0);
   vec2 hd = normalize(d.xz + vec2(1e-5));
@@ -47,7 +66,10 @@ vec3 hc_ceu(vec3 d) {
   float cs = clamp(dot(normalize(d), HC_SOL), 0.0, 1.0);
   c += vec3(1.5, 0.74, 0.27) * pow(cs, 7.0) * 0.5;
   vec3 noturno = mix(vec3(0.018, 0.028, 0.065), vec3(0.002, 0.005, 0.018), sqrt(y));
-  return mix(c, noturno, hcNoite);
+  vec3 ceu = mix(c, noturno, hcNoite);
+  // Uma faixa de crepúsculo separa o dourado do azul, em vez de apenas escurecer o quadro.
+  ceu += hcCrepusculo * vec3(0.32, 0.075, 0.035) * exp(-y * 9.0) * (0.35 + 0.65 * perto);
+  return ceu;
 }
 // Clarão em volta do sol: só no céu. Na bruma ele lavaria as árvores em contraluz.
 vec3 hc_halo(vec3 d) {
@@ -147,7 +169,7 @@ gl_FragColor = vec4(outgoingLight, diffuseColor.a);
 
 function materialCeu(ambiente: boolean, oitavas: number): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
-    uniforms: { hcNoite: NOITE },
+    uniforms: UNIFORMES_CEU,
     side: THREE.BackSide,
     depthWrite: false,
     fog: false,
@@ -187,9 +209,15 @@ void main() {
     c += (1.0 - hcNoite) * (vec3(30.0, 18.0, 7.0) * smoothstep(0.99975, 0.99996, cs) + vec3(3.0, 1.6, 0.5) * pow(cs, 2500.0));
     vec2 st = vec2(atan(d.z, d.x), asin(d.y)) * 330.0;
     float star = step(0.996, hc_h21(floor(st))) * pow(max(0.0, 1.0 - length(fract(st) - 0.5) * 2.0), 9.0);
-    c += hcNoite * vec3(0.65, 0.75, 1.0) * star * smoothstep(0.05, 0.3, d.y);
-    float moon = dot(d, normalize(vec3(-0.35, 0.55, -0.75)));
-    c += hcNoite * vec3(0.7, 0.8, 1.0) * (smoothstep(0.99965, 0.9998, moon) + pow(max(moon,0.0), 90.0) * 0.04);
+    c += hcEstrelas * vec3(0.65, 0.75, 1.0) * star * smoothstep(0.05, 0.3, d.y);
+    float moon = dot(d, hcLua);
+    float discoLua = smoothstep(0.99979, 0.99985, moon);
+    vec3 luaX = normalize(cross(hcLua, vec3(0.0, 1.0, 0.0)));
+    vec3 luaY = cross(luaX, hcLua);
+    vec2 luaUV = vec2(dot(d, luaX), dot(d, luaY)) * 48.0;
+    float relevo = 0.78 + 0.14 * hc_vn(luaUV * 13.0) + 0.08 * hc_vn(luaUV * 31.0);
+    float bordo = sqrt(max(0.0, 1.0 - dot(luaUV, luaUV)));
+    c += hcNoite * vec3(0.72, 0.82, 1.0) * (discoLua * relevo * (0.72 + bordo * 0.28) + pow(max(moon,0.0), 110.0) * 0.045);
     c = mix(c, hc_bruma(d), 1.0 - smoothstep(-0.02, 0.03, d.y));
   #endif
   gl_FragColor = vec4(c, 1.0);
