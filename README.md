@@ -1,4 +1,4 @@
-# Imob — conceito de imobiliária por Connecta
+# Imobiliária — conceito por Connecta
 
 Experiência de portfólio criada pela **Connecta** para demonstrar desenvolvimento de interfaces, animação por rolagem e renderização 3D na web.
 
