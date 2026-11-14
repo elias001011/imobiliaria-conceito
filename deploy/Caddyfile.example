@@ -1,0 +1,58 @@
+# Apenas dist/ deve ser servido. Defina SITE_ADDRESS e SITE_ROOT na hospedagem.
+(site_headers) {
+	header {
+		-Server
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "accelerometer=(), autoplay=(), browsing-topics=(), camera=(), clipboard-read=(), display-capture=(), geolocation=(), gyroscope=(), hid=(), interest-cohort=(), magnetometer=(), microphone=(), payment=(), publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()"
+		# Isolamento de origem: nada de fora entra, nada de fora incorpora este site.
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Embedder-Policy "require-corp"
+		Cross-Origin-Resource-Policy "same-origin"
+		Origin-Agent-Cluster "?1"
+		X-Permitted-Cross-Domain-Policies "none"
+		X-DNS-Prefetch-Control "off"
+		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' blob:; worker-src 'self'; manifest-src 'self'; media-src 'self'; frame-src 'none'; child-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+		X-Robots-Tag "noindex, nofollow, noarchive"
+	}
+}
+{$SITE_ADDRESS:localhost} {
+	import site_headers
+	header Strict-Transport-Security "max-age=31536000"
+	encode zstd gzip
+	# Só leitura. handle (e não respond solto) para valer antes do file_server.
+	@escrita not method GET HEAD
+	handle @escrita {
+		header Allow "GET, HEAD"
+		header Cache-Control "no-store"
+		respond 405
+	}
+	@sensivel path_regexp sensitive (^|/)(\.[^/]*|node_modules|src|deploy|docs|tests)(/|$)|\.(env|pem|key|map|sh|tgz|zip)$
+	handle @sensivel {
+		error 404
+	}
+	@hash path /assets/*
+	header @hash Cache-Control "public, max-age=31536000, immutable"
+	@media path /imoveis/* /hero/* /fonts/* /panorama/*
+	@brand path /brand/*
+	header @brand Cache-Control "public, max-age=3600"
+	header @media Cache-Control "public, max-age=604800"
+	@html path / /index.html /imoveis /imoveis/ /tour360 /theme-init.js
+	header @html Cache-Control "no-cache"
+	root * {$SITE_ROOT:./dist}
+	@catalogo path /imoveis /imoveis/ /tour360
+	handle @catalogo {
+		rewrite * /index.html
+		file_server
+	}
+	handle {
+		file_server
+	}
+	handle_errors {
+		header Cache-Control "no-store"
+		import site_headers
+		header Strict-Transport-Security "max-age=31536000"
+		respond "{err.status_code}" {err.status_code}
+	}
+}
