@@ -198,9 +198,9 @@ export default function HeroSection({ onSearch }: { onSearch: () => void }) {
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => mo.disconnect();
   }, [animated]);
-  const poster = `/hero/abertura-${layout === 'tall' ? 'tall' : 'wide'}-${posterTheme}-v4.webp`;
+  const poster = `/hero/abertura-${layout === 'tall' ? 'tall' : 'wide'}-${posterTheme}-v3.webp`;
   const posterPicture = (className: string) => <picture>
-    {layout !== 'tall' && <source media="(min-aspect-ratio: 9/10) and (max-aspect-ratio: 8/5)" srcSet={`/hero/abertura-medium-${posterTheme}-v4.webp`} />}
+    {layout !== 'tall' && <source media="(min-aspect-ratio: 9/10) and (max-aspect-ratio: 8/5)" srcSet={`/hero/abertura-medium-${posterTheme}-v3.webp`} />}
     <img className={className} src={poster} alt="" aria-hidden="true" />
   </picture>;
 

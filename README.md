@@ -9,7 +9,7 @@ Experiência de portfólio criada pela **Connecta** para demonstrar desenvolvime
 ## A experiência
 
 - Hero com casa e paisagem procedurais em Three.js. A câmera percorre deck, fachada, porta e interior conforme a rolagem.
-- Temas claro e escuro com percurso do sol e da lua, crepúsculo e iluminação correspondente na cena.
+- Temas claro e escuro com percurso visual do sol e da lua, preservando a iluminação original de cada tema.
 - Catálogo com pesquisa local por tipo, código e palavra, além de seis destaques na página inicial.
 - Cartões com fotografias empilhadas, ficha em diálogo nativo com transição discreta e galeria ampliada dentro da ficha. No desktop, a ficha fecha por clique fora ou Esc; no celular, conserva o botão de fechar.
 - Demonstração panorâmica 360° no primeiro imóvel, com retorno à ficha e à posição anterior.

@@ -4,21 +4,22 @@ import { cicloCeleste, type CicloCeleste } from './cicloCeleste';
 
 const ciclo: CicloCeleste = { sol: [0, 0, 0], lua: [0, 0, 0], luzSol: 1, luzLua: 0, estrelas: 0, crepusculo: 0 };
 cicloCeleste(0, ciclo);
-export const SOL = new THREE.Vector3().fromArray(ciclo.sol);
+// Direção original da iluminação: não acompanha a animação decorativa dos astros.
+const AZ = THREE.MathUtils.degToRad(70);
+const EL = THREE.MathUtils.degToRad(9);
+export const SOL = new THREE.Vector3(Math.sin(AZ) * Math.cos(EL), Math.sin(EL), Math.cos(AZ) * Math.cos(EL));
 export const COR_SOL = new THREE.Color(1.0, 0.63, 0.31);
 export const NOITE = { value: 0 };
-export const DIRECAO_SOL = { value: SOL.clone() };
+export const DIRECAO_SOL = { value: new THREE.Vector3().fromArray(ciclo.sol) };
 export const DIRECAO_LUA = { value: new THREE.Vector3().fromArray(ciclo.lua) };
-export const CREPUSCULO = { value: 0 };
 export const ESTRELAS = { value: 0 };
-export const UNIFORMES_CEU = { hcNoite: NOITE, hcSol: DIRECAO_SOL, hcLua: DIRECAO_LUA, hcCrepusculo: CREPUSCULO, hcEstrelas: ESTRELAS };
+export const UNIFORMES_CEU = { hcNoite: NOITE, hcSol: DIRECAO_SOL, hcLua: DIRECAO_LUA, hcEstrelas: ESTRELAS };
 
 export function atualizarCeu(noite: number, vertical = false): CicloCeleste {
   cicloCeleste(noite, ciclo, vertical);
   NOITE.value = noite;
   DIRECAO_SOL.value.fromArray(ciclo.sol);
   DIRECAO_LUA.value.fromArray(ciclo.lua);
-  CREPUSCULO.value = ciclo.crepusculo;
   ESTRELAS.value = ciclo.estrelas;
   return ciclo;
 }
@@ -43,9 +44,8 @@ const FUNCOES = /* glsl */ `
 uniform float hcNoite;
 uniform vec3 hcSol;
 uniform vec3 hcLua;
-uniform float hcCrepusculo;
 uniform float hcEstrelas;
-#define HC_SOL hcSol
+const vec3 HC_SOL = vec3(${f(SOL.x)}, ${f(SOL.y)}, ${f(SOL.z)});
 vec3 hc_ceu(vec3 d) {
   float y = clamp(d.y, 0.0, 1.0);
   vec2 hd = normalize(d.xz + vec2(1e-5));
@@ -66,10 +66,7 @@ vec3 hc_ceu(vec3 d) {
   float cs = clamp(dot(normalize(d), HC_SOL), 0.0, 1.0);
   c += vec3(1.5, 0.74, 0.27) * pow(cs, 7.0) * 0.5;
   vec3 noturno = mix(vec3(0.018, 0.028, 0.065), vec3(0.002, 0.005, 0.018), sqrt(y));
-  vec3 ceu = mix(c, noturno, hcNoite);
-  // Uma faixa de crepúsculo separa o dourado do azul, em vez de apenas escurecer o quadro.
-  ceu += hcCrepusculo * vec3(0.32, 0.075, 0.035) * exp(-y * 9.0) * (0.35 + 0.65 * perto);
-  return ceu;
+  return mix(c, noturno, hcNoite);
 }
 // Clarão em volta do sol: só no céu. Na bruma ele lavaria as árvores em contraluz.
 vec3 hc_halo(vec3 d) {
@@ -205,7 +202,7 @@ void main() {
   #else
     c += hc_halo(d);
     c = hc_nuvens(d, c);
-    float cs = max(dot(d, HC_SOL), 0.0);
+    float cs = max(dot(d, hcSol), 0.0);
     c += (1.0 - hcNoite) * (vec3(30.0, 18.0, 7.0) * smoothstep(0.99975, 0.99996, cs) + vec3(3.0, 1.6, 0.5) * pow(cs, 2500.0));
     vec2 st = vec2(atan(d.z, d.x), asin(d.y)) * 330.0;
     float star = step(0.996, hc_h21(floor(st))) * pow(max(0.0, 1.0 - length(fract(st) - 0.5) * 2.0), 9.0);

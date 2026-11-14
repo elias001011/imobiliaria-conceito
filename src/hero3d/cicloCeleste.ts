@@ -1,4 +1,4 @@
-// Um único ciclo reversível sincroniza os astros, o céu e as luzes.
+// Percurso visual dos astros. Não modifica a iluminação, as sombras ou o ambiente da cena.
 export interface CicloCeleste {
   sol: [number, number, number];
   lua: [number, number, number];

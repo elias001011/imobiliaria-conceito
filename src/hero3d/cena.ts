@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import type { HeroLayout, HeroQuality } from '../hero/contract';
 import { criarCasa } from './casa';
-import { COR_SOL, criarAmbiente, criarDomo, instalarBruma, SOL, atualizarCeu, DIRECAO_SOL, DIRECAO_LUA, UNIFORMES_CEU } from './ceu';
+import { COR_SOL, criarAmbiente, criarDomo, instalarBruma, SOL, atualizarCeu, UNIFORMES_CEU } from './ceu';
 import { descartar } from './geo';
 import { criarInterior } from './interior';
 import { criarMateriais } from './materiais';
@@ -75,9 +75,6 @@ export async function criarCena(renderer: THREE.WebGLRenderer, qualidade: HeroQu
   sh.normalBias = 0.035;
   sh.radius = baixa ? 1.6 : 2.4;
   scene.add(sol, sol.target);
-  const lua = new THREE.DirectionalLight('#8caeff', 0);
-  lua.target.position.copy(centro);
-  scene.add(lua, lua.target);
 
   // Luzes quentes de dentro: sem sombra, alcance curto.
   const quente = new THREE.Color('#ffc590');
@@ -104,8 +101,7 @@ export async function criarCena(renderer: THREE.WebGLRenderer, qualidade: HeroQu
     m.customProgramCacheKey = () => chave + "-tema";
     m.onBeforeCompile = (shader, r) => { anterior.call(m, shader, r); Object.assign(shader.uniforms, UNIFORMES_CEU); };
   });
-  const COR_OCASO = new THREE.Color('#ff7f41');
-  let sombraEm = 0;
+  const COR_LUA = new THREE.Color('#8caeff');
   let noite = 0; // 0 = dia, 1 = noite (animado)
   let noiteAlvo = 0;
   let layout: HeroLayout = 'wide';
@@ -119,19 +115,11 @@ export async function criarCena(renderer: THREE.WebGLRenderer, qualidade: HeroQu
   // Só uniformes e intensidades: nenhum material é recompilado e nenhuma geometria é recriada.
   const iluminar = () => {
     const n = noite * noite * (3 - 2 * noite);
-    const ciclo = atualizarCeu(n, layout === 'tall');
+    atualizarCeu(n, layout === 'tall');
+    // Valores e direção originais, independentes dos discos visuais no céu.
     scene.environmentIntensity = 0.9 + (0.13 - 0.9) * n;
-    sol.intensity = 6.5 * ciclo.luzSol;
-    sol.color.copy(COR_SOL).lerp(COR_OCASO, ciclo.crepusculo * 0.65);
-    sol.position.copy(centro).addScaledVector(DIRECAO_SOL.value, 100);
-    lua.position.copy(centro).addScaledVector(DIRECAO_LUA.value, 100);
-    lua.intensity = 0.42 * ciclo.luzLua;
-    // A sombra só se atualiza durante o percurso solar, em intervalos discretos.
-    // Quando o sol se apaga, a lua usa luz difusa e o mapa fica em repouso.
-    if (sol.intensity > 0 && (Math.abs(n - sombraEm) >= 0.075 || n === 0)) {
-      renderer.shadowMap.needsUpdate = true;
-      sombraEm = n;
-    }
+    sol.intensity = 6.5 + (0.42 - 6.5) * n;
+    sol.color.copy(COR_SOL).lerp(COR_LUA, n);
     for (const { l, base } of luzes) l.intensity = base * (1 + 0.5 * n);
   };
   const aplicar = () => {
@@ -197,7 +185,6 @@ export async function criarCena(renderer: THREE.WebGLRenderer, qualidade: HeroQu
         layout = novo;
         trilho = criarTrilho(layout);
         iluminar();
-        renderer.shadowMap.needsUpdate = true;
       }
       camera.aspect = aspecto;
       aplicar();
