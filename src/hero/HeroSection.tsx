@@ -16,7 +16,9 @@ const TEXTOS = [
 function webglOk(): boolean {
   try {
     const c = document.createElement('canvas');
-    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+    const gl = c.getContext('webgl2') || c.getContext('webgl');
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return gl !== null;
   } catch {
     return false;
   }
@@ -60,7 +62,7 @@ export default function HeroSection({ onSearch }: { onSearch: () => void }) {
   const progress = useMemo(() => createProgress(forcedProgress() ?? 0), []);
 
   const reduced = useMemo(() => matchMedia('(prefers-reduced-motion: reduce)').matches, []);
-  const can3d = useMemo(() => !reduced && webglOk(), [reduced]);
+  const can3d = useMemo(() => !reduced && typeof IntersectionObserver === 'function' && typeof ResizeObserver === 'function' && webglOk(), [reduced]);
   const quality = useMemo(pickQuality, []);
   const [layout, setLayout] = useState<HeroLayout>(pickLayout);
   const [active, setActive] = useState(false);
@@ -168,7 +170,7 @@ export default function HeroSection({ onSearch }: { onSearch: () => void }) {
   // O 3D só é carregado quando a hero está (ou está prestes a ficar) na tela, e é descartado depois de um tempo longe dela.
   useEffect(() => {
     const el = sectionRef.current;
-    if (!el) return;
+    if (!animated || !el) return;
     let descarte = 0;
     const perto = new IntersectionObserver(([e]) => {
       clearTimeout(descarte);
@@ -189,15 +191,14 @@ export default function HeroSection({ onSearch }: { onSearch: () => void }) {
   }, [animated]);
 
   const [posterTheme, setPosterTheme] = useState(() => document.documentElement.dataset.theme === 'dark' ? 'noite' : 'dia');
-  // Sem 3D (movimento reduzido ou sem WebGL) a foto é a hero inteira e precisa seguir o tema; com 3D ela fica fixa na montagem.
+  // Segue o tema também enquanto o 3D está descartado, evitando um pôster antigo na volta.
   useEffect(() => {
-    if (animated) return;
     const ler = () => setPosterTheme(document.documentElement.dataset.theme === 'dark' ? 'noite' : 'dia');
     ler();
     const mo = new MutationObserver(ler);
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => mo.disconnect();
-  }, [animated]);
+  }, []);
   const poster = `/hero/abertura-${layout === 'tall' ? 'tall' : 'wide'}-${posterTheme}-v6.webp`;
   const posterPicture = (className: string) => <picture>
     {layout !== 'tall' && <source media="(min-aspect-ratio: 9/10) and (max-aspect-ratio: 8/5)" srcSet={`/hero/abertura-medium-${posterTheme}-v6.webp`} />}

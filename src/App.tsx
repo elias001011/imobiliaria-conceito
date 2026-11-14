@@ -47,7 +47,7 @@ export default function App() {
  const [filtro, setFiltro] = useState<Filtro>(() => ({...FILTRO_VAZIO, tipo: tipoValido(new URLSearchParams(location.search).get('tipo'))}));
  const [aberto, setAberto] = useState<Imovel | null>(doHash);
  const buscaInput = useRef<HTMLInputElement>(null);
- useEffect(() => { const pop = () => setAberto(doHash()); addEventListener('popstate',pop); return () => removeEventListener('popstate',pop); }, []);
+ useEffect(() => { const pop = () => setAberto(doHash()); addEventListener('popstate',pop); addEventListener('hashchange',pop); return () => {removeEventListener('popstate',pop); removeEventListener('hashchange',pop);}; }, []);
  const abrir = useCallback((i: Imovel) => { history.pushState(null,'',`#imovel-${i.codigo}`); setAberto(i); },[]);
  const fechar = useCallback(() => { if(doHash()) history.replaceState(null,'',location.pathname+location.search); setAberto(null); },[]);
  const porTipo = (t: Tipo) => { location.href = `/imoveis?tipo=${t}`; };

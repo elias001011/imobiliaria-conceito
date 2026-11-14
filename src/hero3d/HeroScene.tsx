@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import type { HeroLayout, HeroSceneProps } from '../hero/contract';
 import { criarCena, type Cena } from './cena';
+import { createFrameScheduler } from '../lib/frames';
 
 interface Controle {
   ativo(v: boolean): void;
@@ -25,7 +26,6 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
     if (!el) return;
     let morto = false;
     let preparada = false;
-    let raf = 0;
     let cena: Cena | null = null;
     let renderer: THREE.WebGLRenderer | null = null;
     const limpar: (() => void)[] = [];
@@ -58,7 +58,6 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
     let conta = 0;
 
     const quadro = (t: number) => {
-      raf = 0;
       if (morto || !cena || !renderer || !ativo) return;
       const bruto = ultimo ? (t - ultimo) / 1000 : 0;
       const dt = bruto ? Math.min(0.05, bruto) : 1 / 60;
@@ -68,7 +67,7 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
         if (++conta === 40) {
           if (soma / conta > 1 / 45 && dpr > dprMin) {
             dpr = Math.max(dprMin, dpr - 0.25);
-            medir();
+            medir(false);
           }
           soma = 0;
           conta = 0;
@@ -78,14 +77,15 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
       renderer.render(cena.scene, cena.camera);
       canvas.dataset.progress = cena.progresso().toFixed(4);
       atual.current.onProgress?.(cena.progresso());
-      if (movendo) raf = requestAnimationFrame(quadro);
+      if (movendo) pedir();
       else ultimo = 0;
     };
+    const frames = createFrameScheduler(quadro);
     const pedir = () => {
-      if (!raf && !morto && cena && ativo && preparada) raf = requestAnimationFrame(quadro);
+      if (!morto && cena && ativo && preparada) frames.request();
     };
 
-    const medir = () => {
+    const medir = (redesenhar = true) => {
       if (!renderer || !cena) return;
       const w = Math.max(1, el.clientWidth);
       const h = Math.max(1, el.clientHeight);
@@ -93,8 +93,8 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
       renderer.setSize(w, h, false);
       cena.formato(formato, w / h);
       // setSize limpa o canvas: redesenhar no mesmo quadro evita o flash preto (F11, girar a tela).
-      if (preparada && ativo) renderer.render(cena.scene, cena.camera);
-      pedir();
+      if (redesenhar && preparada && ativo) renderer.render(cena.scene, cena.camera);
+      if (redesenhar) pedir();
     };
 
     controle.current = {
@@ -105,9 +105,8 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
           cena?.tema(document.documentElement.dataset.theme === 'dark', true);
           pedir();
         }
-        else if (raf) {
-          cancelAnimationFrame(raf);
-          raf = 0;
+        else {
+          frames.cancel();
           ultimo = 0;
         }
       },
@@ -160,7 +159,7 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
       canvas.dataset.stage = 'pronta';
       pedir();
 
-      const ro = new ResizeObserver(medir);
+      const ro = new ResizeObserver(() => medir());
       ro.observe(el);
       limpar.push(() => ro.disconnect());
       limpar.push(progress.subscribe(pedir));
@@ -183,7 +182,7 @@ export default function HeroScene({ progress, quality, active, layout, onReady, 
     return () => {
       morto = true;
       controle.current = null;
-      if (raf) cancelAnimationFrame(raf);
+      frames.cancel();
       limpar.forEach((f) => f());
       canvas.removeEventListener('webglcontextlost', perdido);
       cena?.descartar();

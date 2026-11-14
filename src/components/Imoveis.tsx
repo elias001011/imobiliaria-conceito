@@ -172,8 +172,9 @@ export function Ficha({ imovel, onFechar }: { imovel: Imovel | null; onFechar: (
       clearTimeout(fechamento.current);
       fechamento.current = 0;
       d.classList.remove('is-closing');
-      if (d.open) return;
       setAtual(0);
+      setAmpliada(false);
+      if (d.open) return;
       d.showModal();
       d.querySelector<HTMLElement>('#ficha-titulo')?.focus({ preventScroll: true });
       document.body.classList.add('ficha-aberta');

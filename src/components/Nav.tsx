@@ -26,7 +26,6 @@ export function Marca({ compacta = false }: { compacta?: boolean }) {
       {!compacta && (
         <span className="marca-texto">
           <span className="marca-nome">Imobiliária</span>
-          <span className="marca-sub mono">imóveis</span>
         </span>
       )}
     </span>

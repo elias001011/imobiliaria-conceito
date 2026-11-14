@@ -1,31 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { observeReveals } from './reveal';
 
 // Revelação Connecta: .io-reveal ganha .in ao entrar na tela (uma vez).
 export function useReveal() {
-  useEffect(() => {
-    const els = () => document.querySelectorAll<HTMLElement>('.io-reveal:not(.in)');
-    if (!('IntersectionObserver' in window)) {
-      els().forEach((e) => e.classList.add('in'));
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => {
-        if (e.isIntersecting) {
-          e.target.classList.add('in');
-          io.unobserve(e.target);
-        }
-      }),
-      { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
-    );
-    const observe = () => els().forEach((e) => io.observe(e));
-    observe();
-    const mo = new MutationObserver(observe);
-    mo.observe(document.body, { childList: true, subtree: true });
-    return () => {
-      io.disconnect();
-      mo.disconnect();
-    };
-  }, []);
+  useEffect(() => observeReveals(), []);
 }
 
 export type Theme = 'light' | 'dark';

@@ -45,7 +45,7 @@ Rotas: `/` (apresentação), `/imoveis` e `/imoveis/` (catálogo), `/tour360` (p
 
 As instruções abaixo documentam o processo de manutenção pela Connecta. Não ampliam as permissões da licença.
 
-Requisito: Node.js 22.12 ou superior e npm. Não há variáveis secretas nem arquivo `.env` necessário.
+Requisito: Node.js 22 a partir de 22.13, ou Node.js 24 ou superior, e npm. Não há variáveis secretas nem arquivo `.env` necessário.
 
 ```sh
 npm ci
@@ -57,7 +57,7 @@ npm audit
 
 `npm run dev` inicia o ambiente de desenvolvimento; `npm run preview` permite conferir o build localmente. Ambos são ferramentas locais, não servidores de produção.
 
-Os testes cobrem filtros combinados, busca sem acentos, parâmetros inválidos, integridade do catálogo 360°, validação do retorno do tour e continuidade numérica do trajeto da câmera em formatos vertical e horizontal e movimento visual dos astros, preservação da direção da luz e orçamento da malha do terreno. A [nota sobre a paisagem](docs/PAISAGEM.md) registra a contagem de geometria e os parâmetros originais de iluminação. A integração contínua executa lint, testes, build e auditoria de dependências.
+Os testes cobrem filtros e busca, parâmetros inválidos, catálogo 360°, retorno do tour, continuidade do trajeto da câmera em formatos vertical e horizontal, movimento visual dos astros, direção da luz e orçamento da malha do terreno. Também verificam o agendamento único de quadros, a liberação dos observadores e a rejeição de arquivos ou referências inválidos no build. A [nota sobre a paisagem](docs/PAISAGEM.md) registra a contagem de geometria e os parâmetros originais de iluminação. A integração contínua executa lint em TypeScript e JavaScript, testes, build e auditoria de dependências. O build também verifica arquivos proibidos, recursos referenciados, imports tardios, fontes e licenças de produção; `npm run check:static` repete essa verificação sobre um `dist/` existente.
 
 ## Publicação estática e segurança
 
@@ -65,7 +65,7 @@ Apenas `dist/` deve ser publicado. O [exemplo Caddy](deploy/Caddyfile.example) d
 
 As imagens e fontes usadas pela aplicação são locais. Não há scripts de analytics, iframes ou requisições a APIs externas. O tema usa `localStorage`; o retorno do tour usa `sessionStorage`. Links externos de crédito e indicação só são acessados por ação do visitante.
 
-Ao atualizar, publique os novos arquivos antes do HTML e preserve temporariamente os chunks com hash da versão anterior: uma aba aberta pode solicitá-los posteriormente. Consulte as [notas de segurança e revisão](docs/REVISAO.md).
+Ao atualizar, publique os novos arquivos antes do HTML e preserve temporariamente os chunks com hash da versão anterior: uma aba aberta pode solicitá-los posteriormente. Consulte as [notas de segurança e revisão](docs/REVISAO.md) e a [nova revisão do repositório público](docs/REVISAO-PUBLICA.md).
 
 ## Autoria e recursos
 
