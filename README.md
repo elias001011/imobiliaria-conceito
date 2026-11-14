@@ -1,8 +1,8 @@
-# Imobiliária — conceito por Connecta
+# Imob — conceito de imobiliária por Connecta
 
 Experiência de portfólio criada pela **Connecta** para demonstrar desenvolvimento de interfaces, animação por rolagem e renderização 3D na web.
 
-**[Ver demonstração](https://imob.connectabr.digital)** · [Connecta](https://connectabr.digital) · [Licença de consulta](LICENSE.md)
+**[Preview na VPS — imob.connectabr.digital](https://imob.connectabr.digital)** · [Connecta](https://connectabr.digital) · [Licença de consulta](LICENSE.md)
 
 > Código público para avaliação técnica. Todos os direitos sobre os elementos originais são reservados à Connecta. Não é um template livre: reutilização, redistribuição, derivados e uso comercial exigem autorização escrita. Consulte a licença, inclusive a ressalva sobre as permissões do GitHub e os materiais de terceiros.
 
@@ -16,6 +16,8 @@ Experiência de portfólio criada pela **Connecta** para demonstrar desenvolvime
 - Layout responsivo, navegação por teclado, movimento reduzido e imagem estática quando a experiência WebGL não está disponível.
 
 Os imóveis, valores e características são fictícios. As fotografias são ilustrativas. O formulário é demonstrativo: não envia nem armazena os dados preenchidos.
+
+O preview oficial é hospedado na VPS da Connecta em **https://imob.connectabr.digital**. Este repositório guarda o código versionado do site; GitHub Pages não é utilizado para hospedagem.
 
 ## Arquitetura
 
